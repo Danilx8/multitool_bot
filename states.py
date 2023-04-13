@@ -13,3 +13,12 @@ class InterviewState(StatesGroup):
     name_input = State()
     age_input = State()
     height_input = State()
+
+
+class QuestionState(StatesGroup):
+    wait_for_answer = State()
+
+
+# class ScheduleState(StatesGroup):
+#     subject_input = State()
+#     students_input = State()
