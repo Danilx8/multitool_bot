@@ -19,6 +19,6 @@ class QuestionState(StatesGroup):
     wait_for_answer = State()
 
 
-# class ScheduleState(StatesGroup):
-#     subject_input = State()
-#     students_input = State()
+class ScheduleState(StatesGroup):
+    subject_input = State()
+    students_input = State()
