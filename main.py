@@ -140,6 +140,8 @@ async def enter_students(message: types.message, state: FSMContext):
             add_students(message.text, (await state.get_data())['subject'], (await state.get_data())['column'])
         except:
             await bot.send_message(text='Произошла ошибка! Попробуйте ещё раз', chat_id=message.chat.id)
+        else:
+            await message.reply('Студенты добавлены')
     else:
         await message.reply('Посещаемость заполнена!', reply_markup=kb.delete_keyboard)
         await bot.send_message(text='Можешь посмотреть и другие режимы, доступные в этом боте', chat_id=message.chat.id,
