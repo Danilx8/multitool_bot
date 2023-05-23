@@ -1,4 +1,6 @@
 import requests
+import os
+import openai
 from aiogram import Bot, types
 from aiogram.utils import executor
 from aiogram.dispatcher import FSMContext
@@ -6,10 +8,12 @@ from aiogram.dispatcher import Dispatcher
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
 from Token import TOKEN
-from states import MainMenuState, VoiceInputState, InterviewState, QuestionState, ScheduleState
+from Token import CHAT_TOKEN
+from states import MainMenuState, VoiceInputState, InterviewState, QuestionState, ScheduleState, ChatState
 import keyboards as kb
 from gsheets import add_subject, add_students
 
+openai.api_key = CHAT_TOKEN
 bot = Bot(token=TOKEN)
 dp = Dispatcher(bot, storage=MemoryStorage())
 
@@ -31,9 +35,7 @@ async def query_handle(call: types.callback_query):
 async def audio_handler(message: types.Message, state=FSMContext):
     if message.voice:
         await message.reply('Слышу тебя! Приём.')
-    elif message.text != 'Выйти из выбранного режима':
-        await message.reply('Не понимаю тебя. Запиши голосовое!')
-    else:
+    elif message.text == 'Выйти из выбранного режима':
         await state.finish()
         await message.reply('Хорошо поговорили!', reply_markup=kb.delete_keyboard)
         await bot.send_message(text='Можешь посмотреть и другие режимы, доступные в этом боте', chat_id=message.chat.id,
@@ -144,6 +146,31 @@ async def enter_students(message: types.message, state: FSMContext):
             await message.reply('Студенты добавлены')
     else:
         await message.reply('Посещаемость заполнена!', reply_markup=kb.delete_keyboard)
+        await bot.send_message(text='Можешь посмотреть и другие режимы, доступные в этом боте', chat_id=message.chat.id,
+                               reply_markup=kb.main_menu_kb)
+        await state.finish()
+
+
+@dp.callback_query_handler(text='chat')
+async def start_chat(call: types.callback_query):
+    await ChatState.wait_for_answer.set()
+    await bot.send_message(text='Чат с ботом начался! Все дальнейшие сообщения будут генерироваться на основе ваших '
+                                'сообщений. Чтобы выйти из чата просто напишите "Выйти из выбранного режима"',
+                           chat_id=call.message.chat.id, reply_markup=kb.leave_kb)
+
+
+@dp.message_handler(state=ChatState)
+async def speak_to_ai(message: types.message, state: FSMContext):
+    if message.text != 'Выйти из выбранного режима':
+        completion = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "user", "content": message.text}
+            ]
+        )
+        await message.reply(completion.choices[0].message.content)
+    else:
+        await bot.send_message(text='Отлично пообщались! Пиши ещё!', reply_markup=kb.delete_keyboard)
         await bot.send_message(text='Можешь посмотреть и другие режимы, доступные в этом боте', chat_id=message.chat.id,
                                reply_markup=kb.main_menu_kb)
         await state.finish()

@@ -22,3 +22,7 @@ class QuestionState(StatesGroup):
 class ScheduleState(StatesGroup):
     subject_input = State()
     students_input = State()
+
+
+class ChatState(StatesGroup):
+    wait_for_answer = State();
