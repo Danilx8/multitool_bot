@@ -10,7 +10,7 @@ def add_subject(subject):
     existing_worksheets = sh.worksheets()
     found_worksheet = ""
     for current_sheet in existing_worksheets:
-        if current_sheet.title.casefold() == subject.casefold():
+        if current_sheet.title == subject:
             found_worksheet = subject
             break
 
